@@ -1,0 +1,37 @@
+name: Admin Service CI
+
+on:
+  push:
+    paths:
+      - 'services/admin-service/**'
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Navigate to service directory
+        run: cd services/admin-service
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: services/admin-service
+
+      - name: Run Unit Tests
+        run: npm test
+        working-directory: services/admin-service
+
+      - name: Docker Build & Push
+        run: |
+          docker build -t johnnychris777/admin-service:latest .
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push johnnychris777/admin-service:latest
+        working-directory: services/admin-service
